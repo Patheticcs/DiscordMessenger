@@ -935,14 +935,10 @@
       </div>
     </div>
     <script>
-      const webhookUrlInput = document.getElementById('webhookUrl');
+const webhookUrlInput = document.getElementById('webhookUrl');
 const usernameInput = document.getElementById('username');
 const avatarInput = document.getElementById('avatar');
 const messageInput = document.getElementById('message');
-const embedTitleInput = document.getElementById('embedTitle');
-const embedDescriptionInput = document.getElementById('embedDescription');
-const embedColorInput = document.getElementById('embedColor');
-const embedFooterInput = document.getElementById('embedFooter');
 const sendIntervalInput = document.getElementById('sendInterval');
 const sendCountInput = document.getElementById('sendCount');
 const sendBtn = document.getElementById('sendBtn');
@@ -951,15 +947,11 @@ const stopBtn = document.getElementById('stopBtn');
 const statusElement = document.getElementById('status');
 const jsonPreview = document.getElementById('jsonPreview');
 const logContent = document.getElementById('logContent');
-
+const addEmbedBtn = document.getElementById('addEmbedBtn');
+const embedsContainer = document.getElementById('embedsContainer');
 const previewAvatar = document.getElementById('previewAvatar');
 const previewUsername = document.getElementById('previewUsername');
 const previewContent = document.getElementById('previewContent');
-const previewEmbed = document.getElementById('previewEmbed');
-const previewEmbedTitle = document.getElementById('previewEmbedTitle');
-const previewEmbedDescription = document.getElementById('previewEmbedDescription');
-const previewEmbedFooter = document.getElementById('previewEmbedFooter');
-
 const embedToggle = document.getElementById('embedToggle');
 const embedSettings = document.getElementById('embedSettings');
 const sendingToggle = document.getElementById('sendingToggle');
@@ -977,20 +969,18 @@ let webhookDefaults = {
 };
 
 function init() {
+    loadSavedData();
     toggleSection(embedToggle, embedSettings);
     toggleSection(sendingToggle, sendingSettings);
     toggleSection(logToggle, messageLog);
-    
     initToolbar();
-    updateAllInputs();
+    setupInputListeners();
     initKeyboardShortcuts();
-    
     sendBtn.addEventListener('click', sendMessage);
     startBtn.addEventListener('click', startSending);
     stopBtn.addEventListener('click', stopSending);
-    
+    addEmbedBtn.addEventListener('click', addEmbed);
     updatePreview();
-    
     window.addEventListener('beforeunload', (e) => {
         if (sending) {
             const message = 'Messages are still being sent. Are you sure you want to leave?';
@@ -998,49 +988,122 @@ function init() {
             return message;
         }
     });
-    
     document.querySelectorAll('.card').forEach(card => {
         card.addEventListener('mouseenter', () => {
             card.style.transform = 'translateY(-5px)';
             card.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
         });
-        
         card.addEventListener('mouseleave', () => {
             card.style.transform = 'translateY(0)';
             card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
         });
     });
-    
     webhookUrlInput.addEventListener('focus', function() {
-        if (!this.value) {
-            this.placeholder = 'https://discord.com/api/webhooks/1234567890/abcdefghijklmnopqrstuvwxyz';
-        }
+        if (!this.value) this.placeholder = 'https://discord.com/api/webhooks/1234567890/abcdefghijklmnopqrstuvwxyz';
     });
-    
     webhookUrlInput.addEventListener('blur', function() {
         this.placeholder = 'https://discord.com/api/webhooks/...';
     });
-    
     webhookUrlInput.addEventListener('change', tryFetchWebhookInfo);
 }
 
-async function tryFetchWebhookInfo() {
-    const webhookUrl = webhookUrlInput.value.trim();
-    if (!webhookUrl) return;
-    
-    try {
-        const response = await fetch(webhookUrl);
-        if (response.ok) {
-            const data = await response.json();
-            webhookDefaults = {
-                name: data.name || 'Webhook Default',
-                avatar: data.avatar ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
-            };
-            updatePreview();
+function loadSavedData() {
+    const savedData = localStorage.getItem('webhookSenderData');
+    if (savedData) {
+        const data = JSON.parse(savedData);
+        webhookUrlInput.value = data.webhookUrl || '';
+        usernameInput.value = data.username || '';
+        avatarInput.value = data.avatar || '';
+        messageInput.value = data.message || '';
+        sendIntervalInput.value = data.sendInterval || '';
+        sendCountInput.value = data.sendCount || '';
+        if (data.embeds && data.embeds.length > 0) {
+            document.querySelectorAll('.embed-section').forEach(embed => embed.remove());
+            data.embeds.forEach(embedData => addEmbed(embedData));
         }
-    } catch (error) {
-        console.log('Could not fetch webhook info, using defaults');
     }
+}
+
+function saveFormData() {
+    const embeds = [];
+    document.querySelectorAll('.embed-section').forEach(embedEl => {
+        embeds.push({
+            title: embedEl.querySelector('.embed-title').value,
+            description: embedEl.querySelector('.embed-description').value,
+            color: embedEl.querySelector('.embed-color').value,
+            footer: embedEl.querySelector('.embed-footer').value
+        });
+    });
+    const formData = {
+        webhookUrl: webhookUrlInput.value,
+        username: usernameInput.value,
+        avatar: avatarInput.value,
+        message: messageInput.value,
+        sendInterval: sendIntervalInput.value,
+        sendCount: sendCountInput.value,
+        embeds: embeds
+    };
+    localStorage.setItem('webhookSenderData', JSON.stringify(formData));
+}
+
+function addEmbed(embedData = {}) {
+    const embedId = Date.now();
+    const embedSection = document.createElement('div');
+    embedSection.className = 'embed-section card';
+    embedSection.dataset.id = embedId;
+    embedSection.innerHTML = `
+        <div class="card-header">
+            <h3>Embed</h3>
+            <button class="btn btn-danger btn-sm remove-embed" data-id="${embedId}">Remove</button>
+        </div>
+        <div class="card-body">
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" class="form-control embed-title" value="${embedData.title || ''}" placeholder="Embed Title">
+            </div>
+            <div class="form-group">
+                <label>Description</label>
+                <textarea class="form-control embed-description" placeholder="Embed Description">${embedData.description || ''}</textarea>
+            </div>
+            <div class="form-group">
+                <label>Color</label>
+                <input type="color" class="form-control embed-color" value="${embedData.color || '#7289da'}">
+            </div>
+            <div class="form-group">
+                <label>Footer</label>
+                <input type="text" class="form-control embed-footer" value="${embedData.footer || ''}" placeholder="Embed Footer">
+            </div>
+        </div>
+    `;
+    embedsContainer.appendChild(embedSection);
+    embedSection.querySelector('.remove-embed').addEventListener('click', (e) => {
+        e.preventDefault();
+        embedSection.remove();
+        updatePreview();
+        saveFormData();
+    });
+    const inputs = embedSection.querySelectorAll('input, textarea');
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            updatePreview();
+            saveFormData();
+        });
+    });
+    updatePreview();
+    saveFormData();
+}
+
+function setupInputListeners() {
+    const inputs = [
+        webhookUrlInput, usernameInput, avatarInput, messageInput,
+        sendIntervalInput, sendCountInput
+    ];
+    inputs.forEach(input => {
+        input.addEventListener('input', () => {
+            updatePreview();
+            saveFormData();
+        });
+    });
 }
 
 function toggleSection(toggle, content) {
@@ -1063,9 +1126,7 @@ function initToolbar() {
 function initKeyboardShortcuts() {
     messageInput.addEventListener('keydown', (e) => {
         if (!e.ctrlKey && !e.metaKey) return;
-        
         let format = null;
-        
         if (e.key === 'b' || e.key === 'B') format = 'bold';
         else if (e.key === 'i' || e.key === 'I') format = 'italic';
         else if (e.key === 'u' || e.key === 'U') format = 'underline';
@@ -1085,7 +1146,6 @@ function initKeyboardShortcuts() {
         else if (e.key === 't' || e.key === 'T') format = 'timestamp';
         else if (e.key === 'h' || e.key === 'H') format = 'highlight';
         else if (e.key === '/') format = 'slash';
-        
         if (format) {
             e.preventDefault();
             applyFormatting(format);
@@ -1100,7 +1160,6 @@ function applyFormatting(format) {
     const selectedText = textarea.value.substring(start, end);
     let replacement = '';
     let cursorOffset = 0;
-
     switch (format) {
         case 'bold':
             replacement = `**${selectedText}**`;
@@ -1179,25 +1238,19 @@ function applyFormatting(format) {
             cursorOffset = 4;
             break;
         case 'list':
-            replacement = selectedText 
-                ? `- ${selectedText.replace(/\n/g, '\n- ')}`
-                : '- ';
+            replacement = selectedText ? `- ${selectedText.replace(/\n/g, '\n- ')}` : '- ';
             cursorOffset = 2;
             break;
         case 'olist':
-            replacement = selectedText 
-                ? `1. ${selectedText.replace(/\n/g, '\n1. ')}`
-                : '1. ';
+            replacement = selectedText ? `1. ${selectedText.replace(/\n/g, '\n1. ')}` : '1. ';
             cursorOffset = 3;
             break;
         default:
             return;
     }
-
     textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
     updatePreview();
     textarea.focus();
-    
     if (selectedText) {
         textarea.selectionStart = start + replacement.length;
         textarea.selectionEnd = start + replacement.length;
@@ -1205,44 +1258,59 @@ function applyFormatting(format) {
         textarea.selectionStart = start + cursorOffset;
         textarea.selectionEnd = start + cursorOffset;
     }
+    saveFormData();
 }
 
-function updateAllInputs() {
-    const inputs = [
-        webhookUrlInput, usernameInput, avatarInput, messageInput,
-        embedTitleInput, embedDescriptionInput, embedColorInput, embedFooterInput
-    ];
-    
-    inputs.forEach(input => {
-        input.addEventListener('input', updatePreview);
-    });
+async function tryFetchWebhookInfo() {
+    const webhookUrl = webhookUrlInput.value.trim();
+    if (!webhookUrl) return;
+    try {
+        const response = await fetch(webhookUrl);
+        if (response.ok) {
+            const data = await response.json();
+            webhookDefaults = {
+                name: data.name || 'Webhook Default',
+                avatar: data.avatar ? `https://cdn.discordapp.com/avatars/${data.id}/${data.avatar}.png` : 'https://cdn.discordapp.com/embed/avatars/0.png'
+            };
+            updatePreview();
+            saveFormData();
+        }
+    } catch (error) {
+        console.log('Could not fetch webhook info');
+    }
 }
 
 function updatePreview() {
     const username = usernameInput.value.trim() || webhookDefaults.name;
     const avatarUrl = avatarInput.value.trim() || webhookDefaults.avatar;
-    
     previewUsername.textContent = username;
     previewAvatar.src = avatarUrl;
-    
     const messageContent = messageInput.value.trim();
-    previewContent.innerHTML = parseMarkdown(messageContent || 'Your message will appear here...');
-    
-    const embedTitle = embedTitleInput.value.trim();
-    const embedDescription = embedDescriptionInput.value.trim();
-    const embedColor = embedColorInput.value;
-    const embedFooter = embedFooterInput.value.trim();
-    
-    if (embedTitle || embedDescription || embedFooter) {
-        previewEmbed.style.display = 'block';
-        previewEmbed.style.borderLeftColor = embedColor;
-        previewEmbedTitle.textContent = embedTitle || 'Embed Title';
-        previewEmbedDescription.innerHTML = parseMarkdown(embedDescription || 'Embed Description');
-        previewEmbedFooter.textContent = embedFooter || 'Embed Footer';
-    } else {
-        previewEmbed.style.display = 'none';
-    }
-    
+    let previewHtml = parseMarkdown(messageContent || 'Your message will appear here...');
+    const urls = messageContent.match(/(https?:\/\/[^\s]+)/g) || [];
+    urls.forEach(url => {
+        if (wouldGenerateEmbed(url)) previewHtml += generateLinkEmbed(url);
+    });
+    previewContent.innerHTML = previewHtml;
+    document.querySelectorAll('.preview-embed').forEach(preview => preview.remove());
+    document.querySelectorAll('.embed-section').forEach(embedEl => {
+        const title = embedEl.querySelector('.embed-title').value.trim();
+        const description = embedEl.querySelector('.embed-description').value.trim();
+        const color = embedEl.querySelector('.embed-color').value;
+        const footer = embedEl.querySelector('.embed-footer').value.trim();
+        if (title || description || footer) {
+            const embedPreview = document.createElement('div');
+            embedPreview.className = 'preview-embed discord-embed';
+            embedPreview.style.display = 'block';
+            embedPreview.style.borderLeftColor = color;
+            embedPreview.innerHTML = `
+                <div class="discord-embed-title">${title || 'Embed Title'}</div>
+                <div class="discord-embed-description">${parseMarkdown(description || 'Embed Description')}</div>
+                ${footer ? `<div class="discord-embed-footer">${footer}</div>` : ''}
+            `;
+            previewContent.appendChild(embedPreview);
+        }
+    });
     updateJsonPreview();
 }
 
@@ -1253,74 +1321,47 @@ function updateJsonPreview() {
 
 function parseMarkdown(text) {
     if (!text) return '';
-    
     text = text.replace(/```([a-z]*)\n?([\s\S]*?)\n?```/gi, (match, lang, code) => {
         return `\`\`\`${lang ? lang+'\n' : ''}${escapeHtml(code)}\`\`\``;
     });
-
     text = escapeHtml(text)
         .replace(/&lt;(\/?pre)&gt;/g, '<$1>')
         .replace(/&lt;(\/?code)&gt;/g, '<$1>');
-
     text = text.replace(/```([a-z]*)\n?([\s\S]*?)\n?```/gi, (match, lang, code) => {
         return `<pre class="discord-codeblock">${code}</pre>`;
     });
-
     text = text.replace(/`([^`]+)`/g, '<code class="discord-inline-code">$1</code>');
-    
     text = text.replace(/^# (.*$)/gm, '<h1 class="discord-header-1">$1</h1>');
     text = text.replace(/^## (.*$)/gm, '<h2 class="discord-header-2">$1</h2>');
     text = text.replace(/^### (.*$)/gm, '<h3 class="discord-header-3">$1</h3>');
-    
     text = text.replace(/\*\*([^*]+)\*\*/g, '<strong class="discord-bold">$1</strong>');
     text = text.replace(/__([^_]+)__/g, '<strong class="discord-bold">$1</strong>');
-    
     text = text.replace(/\*([^*]+)\*/g, '<em class="discord-italic">$1</em>');
     text = text.replace(/_([^_]+)_/g, '<em class="discord-italic">$1</em>');
-    
     text = text.replace(/__([^_]+)__/g, '<u class="discord-underline">$1</u>');
-    
     text = text.replace(/~~([^~]+)~~/g, '<s class="discord-strikethrough">$1</s>');
-    
     text = text.replace(/\|\|([^|]+)\|\|/g, '<span class="discord-spoiler">$1</span>');
-    
     text = text.replace(/==([^=]+)==/g, '<span class="discord-highlight">$1</span>');
-    
     text = text.replace(/^>\s(.+)$/gm, '<div class="discord-blockquote">$1</div>');
-    
     text = text.replace(/^-\s+(.*$)/gm, '<ul class="discord-list"><li class="discord-list-item">$1</li></ul>');
     text = text.replace(/^(\d+)\.\s+(.*$)/gm, '<ol class="discord-ordered-list"><li class="discord-ordered-item">$2</li></ol>');
-    
     text = text.replace(/@everyone/g, '<span class="discord-mention everyone">@everyone</span>');
     text = text.replace(/@here/g, '<span class="discord-mention here">@here</span>');
-    
     text = text.replace(/&lt;@!?(\d+)&gt;/g, '<span class="discord-mention">@user</span>');
-    
     text = text.replace(/&lt;#(\d+)&gt;/g, '<span class="discord-channel">#channel</span>');
-    
     text = text.replace(/&lt;@&amp;(\d+)&gt;/g, '<span class="discord-role">@role</span>');
-    
     text = text.replace(/&lt;\/([a-zA-Z0-9_-]+)(?::([a-zA-Z0-9_-]+))?(?: .*?)?&gt;/g, '<span class="discord-slash-command">/$1$2</span>');
-    
     text = text.replace(/&lt;:([a-zA-Z0-9_]+):(\d+)&gt;/g, '<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/$2.png" alt=":$1:">');
-    
     text = text.replace(/&lt;a:([a-zA-Z0-9_]+):(\d+)&gt;/g, '<img class="discord-animated-emoji" src="https://cdn.discordapp.com/emojis/$2.gif" alt=":$1:">');
-    
     text = text.replace(/:([a-zA-Z0-9_]+):/g, '<span class="discord-emoji">:$1:</span>');
-    
     text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener noreferrer" class="discord-link">$1</a>');
-    
     text = text.replace(/(https?:\/\/[^\s]+)/g, (match, url) => {
-        if (/<a\s[^>]*href=["']?[^"'\s]+["']?[^>]*>.*?<\/a>/i.test(match)) {
-            return match;
-        }
+        if (/<a\s[^>]*href=["']?[^"'\s]+["']?[^>]*>.*?<\/a>/i.test(match)) return match;
         return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="discord-link">${url}</a>`;
     });
-    
     text = text.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, (match, timestamp, format) => {
         const date = new Date(timestamp * 1000);
         let formattedDate;
-        
         switch (format) {
             case 't':
                 formattedDate = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -1346,13 +1387,10 @@ function parseMarkdown(text) {
             default:
                 formattedDate = date.toLocaleString([], { day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' });
         }
-        
         return `<span class="discord-timestamp" title="${date.toLocaleString()}">${formattedDate}</span>`;
     });
-    
     text = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
     text = text.replace(/\n/g, '<br>');
-    
     return text;
 }
 
@@ -1371,15 +1409,12 @@ function wouldGenerateEmbed(url) {
         /twitch\.tv\//i,
         /\.(jpg|jpeg|png|gif|webp|mp4|mov|webm)$/i
     ];
-    
     return embedPatterns.some(pattern => pattern.test(url));
 }
 
 function generateLinkEmbed(url) {
     if (!wouldGenerateEmbed(url)) return '';
-    
     let embedHtml = '<div class="discord-embed">';
-    
     if (url.includes('youtube.com') || url.includes('youtu.be')) {
         embedHtml += `
             <div class="discord-embed-title">YouTube Video</div>
@@ -1404,52 +1439,13 @@ function generateLinkEmbed(url) {
             <div class="discord-embed-url">${url}</div>
         `;
     }
-    
     embedHtml += '</div>';
     return embedHtml;
-}
-
-function updatePreview() {
-    const username = usernameInput.value.trim() || webhookDefaults.name;
-    const avatarUrl = avatarInput.value.trim() || webhookDefaults.avatar;
-    
-    previewUsername.textContent = username;
-    previewAvatar.src = avatarUrl;
-    
-    const messageContent = messageInput.value.trim();
-    let previewHtml = parseMarkdown(messageContent || 'Your message will appear here...');
-    
-    const urls = messageContent.match(/(https?:\/\/[^\s]+)/g) || [];
-    urls.forEach(url => {
-        if (wouldGenerateEmbed(url)) {
-            previewHtml += generateLinkEmbed(url);
-        }
-    });
-    
-    previewContent.innerHTML = previewHtml;
-    
-    const embedTitle = embedTitleInput.value.trim();
-    const embedDescription = embedDescriptionInput.value.trim();
-    const embedColor = embedColorInput.value;
-    const embedFooter = embedFooterInput.value.trim();
-    
-    if (embedTitle || embedDescription || embedFooter) {
-        previewEmbed.style.display = 'block';
-        previewEmbed.style.borderLeftColor = embedColor;
-        previewEmbedTitle.textContent = embedTitle || 'Embed Title';
-        previewEmbedDescription.innerHTML = parseMarkdown(embedDescription || 'Embed Description');
-        previewEmbedFooter.textContent = embedFooter || 'Embed Footer';
-    } else {
-        previewEmbed.style.display = 'none';
-    }
-    
-    updateJsonPreview();
 }
 
 function formatRelativeTime(timestamp) {
     const now = Math.floor(Date.now() / 1000);
     const diff = now - timestamp;
-    
     if (diff < 60) return 'just now';
     if (diff < 3600) {
         const mins = Math.floor(diff / 60);
@@ -1467,7 +1463,6 @@ function formatRelativeTime(timestamp) {
         const months = Math.floor(diff / 2592000);
         return `${months} month${months !== 1 ? 's' : ''} ago`;
     }
-    
     const years = Math.floor(diff / 31536000);
     return `${years} year${years !== 1 ? 's' : ''} ago`;
 }
@@ -1485,30 +1480,28 @@ function createPayload() {
     const username = usernameInput.value.trim();
     const avatarUrl = avatarInput.value.trim();
     const content = messageInput.value.trim();
-    
     const payload = {
         content: content || null
     };
-    
     if (username) payload.username = username;
     if (avatarUrl) payload.avatar_url = avatarUrl;
-    
-    const embedTitle = embedTitleInput.value.trim();
-    const embedDescription = embedDescriptionInput.value.trim();
-    const embedColor = embedColorInput.value;
-    const embedFooter = embedFooterInput.value.trim();
-    
-    if (embedTitle || embedDescription || embedFooter) {
-        const colorDec = parseInt(embedColor.replace('#', ''), 16);
-        
-        payload.embeds = [{
-            title: embedTitle || undefined,
-            description: embedDescription || undefined,
-            color: colorDec,
-            footer: embedFooter ? { text: embedFooter } : undefined
-        }];
-    }
-    
+    const embeds = [];
+    document.querySelectorAll('.embed-section').forEach(embedEl => {
+        const title = embedEl.querySelector('.embed-title').value.trim();
+        const description = embedEl.querySelector('.embed-description').value.trim();
+        const color = embedEl.querySelector('.embed-color').value;
+        const footer = embedEl.querySelector('.embed-footer').value.trim();
+        if (title || description || footer) {
+            const colorDec = parseInt(color.replace('#', ''), 16);
+            embeds.push({
+                title: title || undefined,
+                description: description || undefined,
+                color: colorDec,
+                footer: footer ? { text: footer } : undefined
+            });
+        }
+    });
+    if (embeds.length > 0) payload.embeds = embeds;
     return payload;
 }
 
@@ -1518,17 +1511,13 @@ async function sendMessage() {
         updateStatus('Please enter a webhook URL', false);
         return false;
     }
-    
     if (!webhookUrl.match(/^https:\/\/(?:discord\.com|discordapp\.com)\/api(?:\/v\d+)?\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?.*)?$/i)) {
         updateStatus('Invalid webhook URL format. Expected format: https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN', false);
         return false;
     }
-    
     const payload = createPayload();
-    
     try {
         updateStatus('Sending message...', true);
-        
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: {
@@ -1536,12 +1525,10 @@ async function sendMessage() {
             },
             body: JSON.stringify(payload)
         });
-        
         if (!response.ok) {
             const errorText = await response.text();
             throw new Error(`HTTP error ${response.status}: ${errorText}`);
         }
-        
         messageCount++;
         updateStatus(`Message sent successfully! (Total: ${messageCount})`, true);
         addToLog(`Message #${messageCount} sent successfully`);
@@ -1556,48 +1543,38 @@ async function sendMessage() {
 
 function startSending() {
     if (sending) return;
-    
     const interval = parseInt(sendIntervalInput.value) || 1000;
     maxMessages = parseInt(sendCountInput.value) || 0;
-    
     if (interval < 500) {
         updateStatus('Interval must be at least 500ms to avoid rate limits', false);
         return;
     }
-    
     if (maxMessages < 0) {
         updateStatus('Message count must be 0 (unlimited) or positive', false);
         return;
     }
-    
     sending = true;
     messageCount = 0;
     startBtn.disabled = true;
     sendBtn.disabled = true;
     stopBtn.disabled = false;
-    
     updateStatus('Starting automatic sending...', true);
     addToLog(`Started sending messages (interval: ${interval}ms, count: ${maxMessages || 'unlimited'})`);
-    
     sendMessage().then(success => {
         if (!success) {
             stopSending();
             return;
         }
-        
         if (maxMessages === 1) {
             stopSending();
             return;
         }
-        
         messageInterval = setInterval(async () => {
             const success = await sendMessage();
-            
             if (maxMessages > 0 && messageCount >= maxMessages) {
                 stopSending();
                 updateStatus(`Completed sending ${maxMessages} messages`, true);
             }
-            
             if (!success) {
                 stopSending();
             }
@@ -1607,13 +1584,11 @@ function startSending() {
 
 function stopSending() {
     if (!sending) return;
-    
     clearInterval(messageInterval);
     sending = false;
     startBtn.disabled = false;
     sendBtn.disabled = false;
     stopBtn.disabled = true;
-    
     updateStatus('Stopped sending messages', false);
     addToLog('Stopped sending messages');
 }
@@ -1626,19 +1601,12 @@ function updateStatus(message, isActive) {
 function addToLog(message, isError = false) {
     const logEntry = document.createElement('div');
     logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
-    
-    if (isError) {
-        logEntry.style.color = 'var(--error-color)';
-    }
-    
+    if (isError) logEntry.style.color = 'var(--error-color)';
     logContent.appendChild(logEntry);
     logContent.scrollTop = logContent.scrollHeight;
-    
     if (!messageLog.classList.contains('active')) {
         logToggle.style.animation = 'titlePulse 1s ease-in-out';
-        setTimeout(() => {
-            logToggle.style.animation = '';
-        }, 1000);
+        setTimeout(() => logToggle.style.animation = '', 1000);
     }
 }
 
