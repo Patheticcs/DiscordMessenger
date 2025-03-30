@@ -1,651 +1,1044 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+  <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WebPurge</title>
+    <title>SendCord</title>
+
+    <!-- Favicon -->
+    <link rel="icon" href="/images/favicon.png" type="image/x-icon">
+    <link rel="apple-touch-icon" href="apple-touch-icon.png">
+
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Metadata -->
+    <meta name="description" content="A powerful tool to compose and send advanced Discord webhooks with ease.">
+    <meta name="keywords" content="Discord, Webhook, Composer, Bot, Automation">
+    <meta name="author" content="SendCord">
+
+    <!-- Open Graph (for social sharing) -->
+    <meta property="og:title" content="Advanced Discord Webhook Composer">
+    <meta property="og:description" content="Create and send custom Discord webhooks effortlessly.">
+    <meta property="og:image" content="https://sendcord.vercel.app/images/thumbnail.png">
+    <meta property="og:url" content="https://sendcord.vercel.app/">
+    <meta property="og:type" content="website">
+  </head>
     <style>
-        :root {
-            --glass-bg: rgba(10, 10, 15, 0.5);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --glass-highlight: rgba(255, 255, 255, 0.15);
-            --glass-shadow: rgba(0, 0, 0, 0.45);
-            --accent-color: rgba(100, 120, 240, 0.8);
-            --delete-color: rgba(240, 40, 60, 0.8);
-            --text-color: rgba(240, 240, 250, 0.95);
-            --success-color: rgba(30, 200, 120, 0.8);
-            --error-color: rgba(240, 60, 60, 0.8);
-            --neon-purple: rgba(140, 80, 255, 0.8);
-            --neon-blue: rgba(0, 170, 255, 0.8);
+      :root {
+        --glass-bg: rgba(10, 10, 15, 0.5);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-highlight: rgba(255, 255, 255, 0.15);
+        --glass-shadow: rgba(0, 0, 0, 0.45);
+        --accent-color: rgba(100, 120, 240, 0.8);
+        --delete-color: rgba(240, 40, 60, 0.8);
+        --text-color: rgba(240, 240, 250, 0.95);
+        --success-color: rgba(30, 200, 120, 0.8);
+        --error-color: rgba(240, 60, 60, 0.8);
+        --neon-purple: rgba(140, 80, 255, 0.8);
+        --neon-blue: rgba(0, 170, 255, 0.8);
+        --discord-blurple: #5865F2;
+        --discord-green: #57F287;
+        --discord-yellow: #FEE75C;
+        --discord-red: #ED4245;
+        --discord-dark: #2C2F33;
+        --discord-darker: #23272A;
+      }
+
+      body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        color: var(--text-color);
+        position: relative;
+        overflow-x: hidden;
+        background: #030303;
+      }
+
+      .animated-background {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -10;
+        background: linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #101010 70%, #151515 100%);
+        overflow: hidden;
+      }
+
+      .grid-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 200%;
+        height: 200%;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+        background-size: 40px 40px;
+        transform: rotate(5deg) scale(1.5);
+        animation: gridMove 180s linear infinite;
+      }
+
+      @keyframes gridMove {
+        0% {
+          transform: translateY(0) translateX(0) rotate(5deg) scale(1.5);
         }
 
-        body {
-            min-height: 100vh;
-            margin: 0;
-            font-family: 'Inter', sans-serif;
-            color: var(--text-color);
-            position: relative;
-            overflow-x: hidden;
-            background: #030303;
+        100% {
+          transform: translateY(-50%) translateX(-50%) rotate(5deg) scale(1.5);
+        }
+      }
+
+      .floating-orbs {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .orb {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(60px);
+        opacity: 0.15;
+        mix-blend-mode: screen;
+      }
+
+      .orb-1 {
+        top: 20%;
+        left: 10%;
+        width: 400px;
+        height: 400px;
+        background: radial-gradient(circle, rgba(140, 80, 255, 0.6) 0%, rgba(140, 80, 255, 0) 70%);
+        animation: floatOrb1 25s ease-in-out infinite alternate;
+      }
+
+      .orb-2 {
+        bottom: 10%;
+        right: 15%;
+        width: 350px;
+        height: 350px;
+        background: radial-gradient(circle, rgba(0, 170, 255, 0.6) 0%, rgba(0, 170, 255, 0) 70%);
+        animation: floatOrb2 28s ease-in-out infinite alternate;
+      }
+
+      .orb-3 {
+        top: 50%;
+        right: 10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(80, 200, 255, 0.6) 0%, rgba(80, 200, 255, 0) 70%);
+        animation: floatOrb3 30s ease-in-out infinite alternate;
+      }
+
+      .orb-4 {
+        bottom: 40%;
+        left: 20%;
+        width: 250px;
+        height: 250px;
+        background: radial-gradient(circle, rgba(200, 120, 255, 0.6) 0%, rgba(200, 120, 255, 0) 70%);
+        animation: floatOrb4 32s ease-in-out infinite alternate;
+      }
+
+      @keyframes floatOrb1 {
+        0% {
+          transform: translate(0, 0) scale(1);
         }
 
-        /* Background Effects */
-        .animated-background {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -10;
-            background: linear-gradient(135deg, #000000 0%, #0a0a0a 30%, #101010 70%, #151515 100%);
-            overflow: hidden;
+        50% {
+          transform: translate(100px, 50px) scale(1.1);
         }
 
-        .grid-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 200%;
-            height: 200%;
-            background-image:
-                linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-            background-size: 40px 40px;
-            transform: rotate(5deg) scale(1.5);
-            animation: gridMove 180s linear infinite;
+        100% {
+          transform: translate(50px, 100px) scale(0.9);
+        }
+      }
+
+      @keyframes floatOrb2 {
+        0% {
+          transform: translate(0, 0) scale(1);
         }
 
-        @keyframes gridMove {
-            0% {
-                transform: translateY(0) translateX(0) rotate(5deg) scale(1.5);
-            }
-            100% {
-                transform: translateY(-50%) translateX(-50%) rotate(5deg) scale(1.5);
-            }
+        50% {
+          transform: translate(-80px, -40px) scale(1.2);
         }
 
-        .floating-orbs {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            pointer-events: none;
+        100% {
+          transform: translate(-40px, -80px) scale(0.95);
+        }
+      }
+
+      @keyframes floatOrb3 {
+        0% {
+          transform: translate(0, 0) scale(1);
         }
 
-        .orb {
-            position: absolute;
-            border-radius: 50%;
-            filter: blur(60px);
-            opacity: 0.15;
-            mix-blend-mode: screen;
+        33% {
+          transform: translate(-60px, 80px) scale(1.15);
         }
 
-        .orb-1 {
-            top: 20%;
-            left: 10%;
-            width: 400px;
-            height: 400px;
-            background: radial-gradient(circle, rgba(140, 80, 255, 0.6) 0%, rgba(140, 80, 255, 0) 70%);
-            animation: floatOrb1 25s ease-in-out infinite alternate;
+        66% {
+          transform: translate(40px, -60px) scale(0.9);
         }
 
-        .orb-2 {
-            bottom: 10%;
-            right: 15%;
-            width: 350px;
-            height: 350px;
-            background: radial-gradient(circle, rgba(0, 170, 255, 0.6) 0%, rgba(0, 170, 255, 0) 70%);
-            animation: floatOrb2 28s ease-in-out infinite alternate;
+        100% {
+          transform: translate(-30px, 30px) scale(1.05);
+        }
+      }
+
+      @keyframes floatOrb4 {
+        0% {
+          transform: translate(0, 0) scale(1);
         }
 
-        .orb-3 {
-            top: 50%;
-            right: 10%;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(80, 200, 255, 0.6) 0%, rgba(80, 200, 255, 0) 70%);
-            animation: floatOrb3 30s ease-in-out infinite alternate;
+        33% {
+          transform: translate(70px, -50px) scale(1.1);
         }
 
-        .orb-4 {
-            bottom: 40%;
-            left: 20%;
-            width: 250px;
-            height: 250px;
-            background: radial-gradient(circle, rgba(200, 120, 255, 0.6) 0%, rgba(200, 120, 255, 0) 70%);
-            animation: floatOrb4 32s ease-in-out infinite alternate;
+        66% {
+          transform: translate(-50px, 70px) scale(0.95);
         }
 
-        @keyframes floatOrb1 {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(100px, 50px) scale(1.1); }
-            100% { transform: translate(50px, 100px) scale(0.9); }
+        100% {
+          transform: translate(40px, 40px) scale(1.05);
         }
+      }
 
-        @keyframes floatOrb2 {
-            0% { transform: translate(0, 0) scale(1); }
-            50% { transform: translate(-80px, -40px) scale(1.2); }
-            100% { transform: translate(-40px, -80px) scale(0.95); }
-        }
+      .container {
+        width: 100%;
+        max-width: 1200px;
+        margin: 40px auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        box-sizing: border-box;
+      }
 
-        @keyframes floatOrb3 {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(-60px, 80px) scale(1.15); }
-            66% { transform: translate(40px, -60px) scale(0.9); }
-            100% { transform: translate(-30px, 30px) scale(1.05); }
-        }
-
-        @keyframes floatOrb4 {
-            0% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(70px, -50px) scale(1.1); }
-            66% { transform: translate(-50px, 70px) scale(0.95); }
-            100% { transform: translate(40px, 40px) scale(1.05); }
-        }
-
-        /* Main Layout */
+      @media (max-width: 992px) {
         .container {
-            width: 100%;
-            max-width: 1200px;
-            margin: 40px auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            box-sizing: border-box;
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .card {
+        position: relative;
+        background: rgba(5, 5, 10, 0.7);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 1.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow:
+          0 20px 40px rgba(0, 0, 0, 0.6),
+          0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+        overflow: hidden;
+        transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+        z-index: 10;
+      }
+
+      .card-header {
+        padding: 1.5rem 2rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .title {
+        font-family: 'Syne', sans-serif;
+        font-size: 1.5rem;
+        font-weight: 800;
+        text-align: center;
+        margin: 0;
+        background: linear-gradient(90deg, #ffffff 0%, rgba(200, 200, 255, 0.9) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        letter-spacing: 0.05em;
+        animation: titlePulse 4s ease-in-out infinite;
+      }
+
+      @keyframes titlePulse {
+
+        0%,
+        100% {
+          filter: brightness(1);
         }
 
-        @media (max-width: 992px) {
-            .container {
-                grid-template-columns: 1fr;
-            }
+        50% {
+          filter: brightness(1.3);
+        }
+      }
+
+      .card-content {
+        padding: 1.5rem 2rem;
+      }
+
+      .form-group {
+        margin-bottom: 1.25rem;
+      }
+
+      .form-label {
+        display: block;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.05em;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      .form-control {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 0.75rem;
+        font-family: 'Inter', sans-serif;
+        color: white;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) inset;
+        box-sizing: border-box;
+      }
+
+      .form-control:focus {
+        outline: none;
+        border-color: rgba(100, 120, 240, 0.5);
+        background: rgba(255, 255, 255, 0.05);
+        box-shadow:
+          0 2px 10px rgba(0, 0, 0, 0.1) inset,
+          0 0 0 1px rgba(100, 120, 240, 0.3);
+      }
+
+      textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+      }
+
+      .btn {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 1.5rem;
+        border: none;
+        border-radius: 0.75rem;
+        font-family: 'Inter', sans-serif;
+        font-size: 1rem;
+        font-weight: 600;
+        letter-spacing: 0.05em;
+        cursor: pointer;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        color: white;
+        background: linear-gradient(45deg,
+            rgba(100, 120, 240, 0.8),
+            rgba(0, 170, 255, 0.8));
+      }
+
+      .btn-primary {
+        background: linear-gradient(45deg,
+            rgba(100, 120, 240, 0.8),
+            rgba(0, 170, 255, 0.8));
+      }
+
+      .btn-danger {
+        background: linear-gradient(45deg,
+            rgba(240, 40, 60, 0.8),
+            rgba(240, 80, 100, 0.8));
+      }
+
+      .btn:hover {
+        filter: brightness(1.2);
+      }
+
+      .btn:active {
+        filter: brightness(0.9);
+      }
+
+      .btn-block {
+        display: block;
+        width: 100%;
+      }
+
+      .editor-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding: 8px;
+        border-radius: 8px;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .toolbar-btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border: none;
+        border-radius: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+
+      .toolbar-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      .preview-card {
+        border-radius: 0.75rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        margin-bottom: 1.5rem;
+      }
+
+      .preview-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 1rem;
+      }
+
+      .preview-avatar {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 12px;
+        object-fit: cover;
+      }
+
+      .preview-username {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .preview-content {
+        font-size: 0.95rem;
+        line-height: 1.5;
+        word-break: break-word;
+      }
+
+      .preview-embed {
+        margin-top: 1rem;
+        padding: 0.75rem;
+        border-radius: 0.5rem;
+        border-left: 4px solid #3498db;
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .embed-title {
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .embed-description {
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+        line-height: 1.4;
+        white-space: pre-line;
+      }
+
+      .embed-footer {
+        font-size: 0.8rem;
+        opacity: 0.8;
+      }
+
+      .status {
+        padding: 0.75rem;
+        border-radius: 0.75rem;
+        margin-top: 1rem;
+        text-align: center;
+        font-weight: 500;
+        transition: all 0.3s ease;
+      }
+
+      .status.active {
+        background-color: rgba(30, 200, 120, 0.2);
+        color: var(--success-color);
+      }
+
+      .status.inactive {
+        background-color: rgba(240, 60, 60, 0.2);
+        color: var(--error-color);
+      }
+
+      .settings-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 0.75rem;
+      }
+
+      .settings-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        cursor: pointer;
+      }
+
+      .settings-title {
+        font-weight: 600;
+        font-size: 1rem;
+      }
+
+      .settings-content {
+        display: none;
+      }
+
+      .settings-content.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
         }
 
-        /* Card Styling */
-        .card {
-            position: relative;
-            background: rgba(5, 5, 10, 0.7);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 1.5rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow:
-                0 20px 40px rgba(0, 0, 0, 0.6),
-                0 0 0 1px rgba(255, 255, 255, 0.1) inset;
-            overflow: hidden;
-            transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1);
-            z-index: 10;
+        to {
+          opacity: 1;
         }
+      }
 
-        .card-header {
-            padding: 1.5rem 2rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
+      .fade-in {
+        animation: fadeIn 0.3s ease forwards;
+      }
 
-        .title {
-            font-family: 'Syne', sans-serif;
-            font-size: 1.5rem;
-            font-weight: 800;
-            text-align: center;
-            margin: 0;
-            background: linear-gradient(90deg, #ffffff 0%, rgba(200, 200, 255, 0.9) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            letter-spacing: 0.05em;
-            animation: titlePulse 4s ease-in-out infinite;
-        }
+      .formatting-help {
+        margin-top: 0.5rem;
+        font-size: 0.8rem;
+        opacity: 0.7;
+      }
 
-        @keyframes titlePulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.3); }
+      @media (max-width: 768px) {
+        .container {
+          padding: 15px;
+          margin: 20px auto;
         }
 
         .card-content {
-            padding: 1.5rem 2rem;
+          padding: 1rem 1.5rem;
         }
 
-        /* Form Elements */
-        .form-group {
-            margin-bottom: 1.25rem;
+        .title {
+          font-size: 1.25rem;
         }
+      }
 
-        .form-label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            letter-spacing: 0.05em;
-            color: rgba(255, 255, 255, 0.9);
-        }
+      .discord-bold {
+        font-weight: bold;
+      }
 
-        .form-control {
-            width: 100%;
-            padding: 0.75rem 1rem;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 0.75rem;
-            font-family: 'Inter', sans-serif;
-            color: white;
-            font-size: 0.95rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2) inset;
-            box-sizing: border-box;
-        }
+      .discord-italic {
+        font-style: italic;
+      }
 
-        .form-control:focus {
-            outline: none;
-            border-color: rgba(100, 120, 240, 0.5);
-            background: rgba(255, 255, 255, 0.05);
-            box-shadow:
-                0 2px 10px rgba(0, 0, 0, 0.1) inset,
-                0 0 0 1px rgba(100, 120, 240, 0.3);
-        }
+      .discord-underline {
+        text-decoration: underline;
+      }
 
-        textarea.form-control {
-            resize: vertical;
-            min-height: 120px;
-        }
+      .discord-strikethrough {
+        text-decoration: line-through;
+      }
 
-        /* Button styling */
-        .btn {
-            position: relative;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.75rem;
-            font-family: 'Inter', sans-serif;
-            font-size: 1rem;
-            font-weight: 600;
-            letter-spacing: 0.05em;
-            cursor: pointer;
-            overflow: hidden;
-            transition: all 0.3s ease;
-            color: white;
-            background: linear-gradient(45deg, 
-                rgba(100, 120, 240, 0.8), 
-                rgba(0, 170, 255, 0.8)
-            );
-        }
+      .discord-code {
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2em;
+        border-radius: 3px;
+      }
 
-        .btn-primary {
-            background: linear-gradient(45deg, 
-                rgba(100, 120, 240, 0.8), 
-                rgba(0, 170, 255, 0.8)
-            );
-        }
+      .discord-mention {
+        background-color: rgba(88, 101, 242, 0.3);
+        color: #5865f2;
+        padding: 0 2px;
+        border-radius: 3px;
+        font-weight: 500;
+      }
 
-        .btn-danger {
-            background: linear-gradient(45deg, 
-                rgba(240, 40, 60, 0.8), 
-                rgba(240, 80, 100, 0.8)
-            );
-        }
+      .discord-mention.everyone {
+        background-color: rgba(250, 166, 26, 0.3);
+        color: #faa61a;
+      }
 
-        .btn:hover {
-            filter: brightness(1.2);
-        }
+      .discord-mention.here {
+        background-color: rgba(250, 166, 26, 0.3);
+        color: #faa61a;
+      }
 
-        .btn:active {
-            filter: brightness(0.9);
-        }
+      .discord-codeblock {
+        font-family: 'Consolas', 'Courier New', monospace;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.5em;
+        border-radius: 4px;
+        display: block;
+        white-space: pre-wrap;
+        margin: 0.5em 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
 
-        .btn-block {
-            display: block;
-            width: 100%;
-        }
+      .discord-quote {
+        border-left: 3px solid #4f545c;
+        padding-left: 0.8em;
+        margin: 0.5em 0;
+        color: #dcddde;
+      }
 
-        /* Message Editor */
-        .editor-toolbar {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            margin-bottom: 12px;
-            padding: 8px;
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-        }
+      .discord-spoiler {
+        background-color: #202225;
+        color: transparent;
+        cursor: pointer;
+      }
 
-        .toolbar-btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: none;
-            border-radius: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
+      .discord-spoiler:hover {
+        background-color: rgba(32, 34, 37, 0.8);
+        color: inherit;
+      }
 
-        .toolbar-btn:hover {
-            background: rgba(255, 255, 255, 0.2);
-        }
+      .discord-mention {
+        background-color: rgba(88, 101, 242, 0.3);
+        color: #5865f2;
+        padding: 2px 4px;
+        border-radius: 3px;
+        font-weight: 500;
+        cursor: pointer;
+      }
 
-        /* Message Preview */
-        .preview-card {
-            border-radius: 0.75rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            margin-bottom: 1.5rem;
-        }
+      .discord-mention:hover {
+        background-color: rgba(88, 101, 242, 0.4);
+        color: #5865f2;
+      }
 
-        .preview-header {
-            display: flex;
-            align-items: center;
-            margin-bottom: 1rem;
-        }
+      .discord-mention.everyone {
+        background-color: rgba(250, 166, 26, 0.3);
+        color: #faa61a;
+      }
 
-        .preview-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            object-fit: cover;
-        }
+      .discord-mention.here {
+        background-color: rgba(250, 166, 26, 0.3);
+        color: #faa61a;
+      }
 
-        .preview-username {
-            font-weight: 600;
-            font-size: 1rem;
-        }
+      .discord-channel {
+        background-color: rgba(114, 137, 218, 0.1);
+        color: #7289da;
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
 
-        .preview-content {
-            font-size: 0.95rem;
-            line-height: 1.5;
-            word-break: break-word;
-        }
+      .discord-channel:hover {
+        background-color: rgba(114, 137, 218, 0.2);
+        color: #7289da;
+      }
 
-        .preview-embed {
-            margin-top: 1rem;
-            padding: 0.75rem;
-            border-radius: 0.5rem;
-            border-left: 4px solid #3498db;
-            background: rgba(255, 255, 255, 0.05);
-        }
+      .discord-role {
+        background-color: rgba(114, 137, 218, 0.2);
+        color: #7289da;
+        padding: 2px 4px;
+        border-radius: 3px;
+        cursor: pointer;
+      }
 
-        .embed-title {
-            font-weight: 600;
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-        }
+      .discord-role:hover {
+        background-color: rgba(114, 137, 218, 0.3);
+        color: #7289da;
+      }
 
-        .embed-description {
-            font-size: 0.9rem;
-            margin-bottom: 0.5rem;
-        }
+      .discord-embed {
+        margin-top: 8px;
+        border-left: 4px solid #4f545c;
+        padding: 8px 12px;
+        background: rgba(46, 48, 54, 0.3);
+        border-radius: 4px;
+        max-width: 520px;
+      }
 
-        .embed-footer {
-            font-size: 0.8rem;
-            opacity: 0.8;
-        }
+      .discord-embed-title {
+        font-weight: 600;
+        color: #ffffff;
+        margin-bottom: 8px;
+      }
 
-        /* Status Indicators */
-        .status {
-            padding: 0.75rem;
-            border-radius: 0.75rem;
-            margin-top: 1rem;
-            text-align: center;
-            font-weight: 500;
-            transition: all 0.3s ease;
-        }
+      .discord-embed-description {
+        color: #dcddde;
+        font-size: 0.9em;
+        line-height: 1.4;
+      }
 
-        .status.active {
-            background-color: rgba(30, 200, 120, 0.2);
-            color: var(--success-color);
-        }
+      .discord-embed-url {
+        color: #00b0f4;
+        font-size: 0.8em;
+        margin-top: 8px;
+        word-break: break-all;
+      }
 
-        .status.inactive {
-            background-color: rgba(240, 60, 60, 0.2);
-            color: var(--error-color);
-        }
+      .discord-embed-thumbnail {
+        max-width: 80px;
+        max-height: 80px;
+        border-radius: 4px;
+        margin-left: 8px;
+        float: right;
+      }
 
-        /* Settings Panel */
-        .settings-panel {
-            margin-top: 1rem;
-            padding: 1rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 0.75rem;
-        }
+      .discord-embed-image {
+        max-width: 100%;
+        border-radius: 4px;
+        margin-top: 8px;
+      }
 
-        .settings-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 1rem;
-            cursor: pointer;
-        }
+      .discord-emoji {
+        height: 1.2em;
+        width: 1.2em;
+        vertical-align: -0.2em;
+      }
 
-        .settings-title {
-            font-weight: 600;
-            font-size: 1rem;
-        }
+      .discord-timestamp {
+        background-color: rgba(114, 118, 125, 0.3);
+        color: #72767d;
+        padding: 0 2px;
+        border-radius: 3px;
+        font-size: 0.8em;
+      }
 
-        .settings-content {
-            display: none;
-        }
+      .discord-header-1 {
+        font-size: 1.5em;
+        font-weight: 600;
+        margin: 0.5em 0;
+      }
 
-        .settings-content.active {
-            display: block;
-        }
+      .discord-header-2 {
+        font-size: 1.3em;
+        font-weight: 600;
+        margin: 0.5em 0;
+      }
 
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
+      .discord-header-3 {
+        font-size: 1.1em;
+        font-weight: 600;
+        margin: 0.5em 0;
+      }
 
-        .fade-in {
-            animation: fadeIn 0.3s ease forwards;
-        }
+      .discord-list {
+        margin-left: 1.5em;
+        padding-left: 0.5em;
+      }
 
-        /* Responsive */
-        @media (max-width: 768px) {
-            .container {
-                padding: 15px;
-                margin: 20px auto;
-            }
-            
-            .card-content {
-                padding: 1rem 1.5rem;
-            }
-            
-            .title {
-                font-size: 1.25rem;
-            }
-        }
+      .discord-list-item {
+        list-style-type: disc;
+        margin-bottom: 0.3em;
+      }
+
+      .discord-ordered-list {
+        margin-left: 1.5em;
+        padding-left: 0.5em;
+      }
+
+      .discord-ordered-item {
+        list-style-type: decimal;
+        margin-bottom: 0.3em;
+      }
+
+      .discord-slash-command {
+        background-color: rgba(88, 101, 242, 0.15);
+        color: #5865f2;
+        padding: 0 2px;
+        border-radius: 3px;
+        font-family: monospace;
+      }
+
+      .discord-custom-emoji {
+        height: 1.2em;
+        width: 1.2em;
+        vertical-align: -0.2em;
+      }
+
+      .discord-animated-emoji {
+        height: 1.2em;
+        width: 1.2em;
+        vertical-align: -0.2em;
+      }
+
+      .discord-reaction {
+        display: inline-flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 8px;
+        padding: 2px 6px;
+        margin-right: 4px;
+        font-size: 0.9em;
+      }
+
+      .discord-reaction-count {
+        margin-left: 4px;
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      .discord-blockquote {
+        border-left: 4px solid #4f545c;
+        padding-left: 12px;
+        margin: 8px 0;
+        color: #dcddde;
+      }
+
+      .discord-inline-code {
+        font-family: monospace;
+        background: rgba(0, 0, 0, 0.3);
+        padding: 0.2em;
+        border-radius: 3px;
+      }
+
+      .discord-highlight {
+        background-color: rgba(250, 166, 26, 0.2);
+        padding: 0 2px;
+        border-radius: 3px;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Background Effects -->
     <div class="animated-background">
-        <div class="grid-overlay"></div>
-        <div class="floating-orbs">
-            <div class="orb orb-1"></div>
-            <div class="orb orb-2"></div>
-            <div class="orb orb-3"></div>
-            <div class="orb orb-4"></div>
-        </div>
+      <div class="grid-overlay"></div>
+      <div class="floating-orbs">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        <div class="orb orb-4"></div>
+      </div>
     </div>
-
     <div class="container">
-        <!-- Editor Panel -->
-        <div class="card">
-            <div class="card-header">
-                <h1 class="title">Webhook Message Composer</h1>
-            </div>
-            <div class="card-content">
-                <div class="form-group">
-                    <label class="form-label" for="webhookUrl">Webhook URL</label>
-                    <input type="url" id="webhookUrl" class="form-control" placeholder="Enter Discord webhook URL" />
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="username">Username</label>
-                    <input type="text" id="username" class="form-control" placeholder="Enter custom username" />
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label" for="avatar">Avatar URL</label>
-                    <input type="url" id="avatar" class="form-control" placeholder="Enter avatar image URL" />
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">Message Formatting</label>
-                    <div class="editor-toolbar">
-                        <button class="toolbar-btn" data-format="bold" title="Bold">B</button>
-                        <button class="toolbar-btn" data-format="italic" title="Italic">I</button>
-                        <button class="toolbar-btn" data-format="underline" title="Underline">U</button>
-                        <button class="toolbar-btn" data-format="strike" title="Strikethrough">S</button>
-                        <button class="toolbar-btn" data-format="code" title="Code">{ }</button>
-                        <button class="toolbar-btn" data-format="link" title="Link">🔗</button>
-                        <button class="toolbar-btn" data-format="quote" title="Quote">❝</button>
-                    </div>
-                    <textarea id="message" class="form-control" placeholder="Type your message here. Supports Markdown formatting."></textarea>
-                </div>
-
-                <div class="settings-panel">
-                    <div class="settings-header" id="embedToggle">
-                        <div class="settings-title">Embed Settings</div>
-                        <span>▼</span>
-                    </div>
-                    <div class="settings-content" id="embedSettings">
-                        <div class="form-group">
-                            <label class="form-label" for="embedTitle">Title</label>
-                            <input type="text" id="embedTitle" class="form-control" placeholder="Enter embed title" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="embedDescription">Description</label>
-                            <textarea id="embedDescription" class="form-control" placeholder="Enter embed description"></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="embedColor">Color</label>
-                            <input type="color" id="embedColor" class="form-control" value="#3498db" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="embedFooter">Footer</label>
-                            <input type="text" id="embedFooter" class="form-control" placeholder="Enter footer text" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="settings-panel">
-                    <div class="settings-header" id="sendingToggle">
-                        <div class="settings-title">Sending Options</div>
-                        <span>▼</span>
-                    </div>
-                    <div class="settings-content" id="sendingSettings">
-                        <div class="form-group">
-                            <label class="form-label" for="sendInterval">Send Interval (ms)</label>
-                            <input type="number" id="sendInterval" class="form-control" value="1000" min="500" max="10000" />
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label" for="sendCount">Number of Messages (0 = unlimited)</label>
-                            <input type="number" id="sendCount" class="form-control" value="0" min="0" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 1.5rem;">
-                    <button id="sendBtn" class="btn btn-primary btn-block">Send Message</button>
-                    <button id="startBtn" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">Start Sending</button>
-                    <button id="stopBtn" class="btn btn-danger btn-block" style="margin-top: 0.5rem;" disabled>Stop Sending</button>
-                </div>
-
-                <div id="status" class="status inactive">
-                    Ready to send messages
-                </div>
-            </div>
+      <!-- Editor Panel -->
+      <div class="card">
+        <div class="card-header">
+          <h1 class="title">Advanced Discord Webhook Composer</h1>
         </div>
-
-        <!-- Preview Panel -->
-        <div class="card">
-            <div class="card-header">
-                <h1 class="title">Live Preview</h1>
+        <div class="card-content">
+          <div class="form-group">
+            <label class="form-label" for="webhookUrl">Webhook URL</label>
+            <input type="url" id="webhookUrl" class="form-control" placeholder="https://discord.com/api/webhooks/..." />
+            <div class="formatting-help">Paste your Discord webhook URL here</div>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="username">Username</label>
+            <input type="text" id="username" class="form-control" placeholder="Leave empty to use webhook default" />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="avatar">Avatar URL</label>
+            <input type="url" id="avatar" class="form-control" placeholder="Leave empty to use webhook default" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Message Content</label>
+            <div class="editor-toolbar">
+              <button class="toolbar-btn" data-format="bold" title="Bold (Ctrl+B)">B</button>
+              <button class="toolbar-btn" data-format="italic" title="Italic (Ctrl+I)">I</button>
+              <button class="toolbar-btn" data-format="underline" title="Underline (Ctrl+U)">U</button>
+              <button class="toolbar-btn" data-format="strike" title="Strikethrough (Ctrl+S)">S</button>
+              <button class="toolbar-btn" data-format="code" title="Inline Code (Ctrl+`)">{ }</button>
+              <button class="toolbar-btn" data-format="codeblock" title="Code Block (Shift+Ctrl+`)">```</button>
+              <button class="toolbar-btn" data-format="link" title="Link (Ctrl+K)">🔗</button>
+              <button class="toolbar-btn" data-format="quote" title="Quote (Ctrl+Q)">❝</button>
+              <button class="toolbar-btn" data-format="spoiler" title="Spoiler (Ctrl+P)">!</button>
+              <button class="toolbar-btn" data-format="mention" title="Mention User">@</button>
+              <button class="toolbar-btn" data-format="channel" title="Mention Channel">#</button>
+              <button class="toolbar-btn" data-format="role" title="Mention Role">@&</button>
+              <button class="toolbar-btn" data-format="slash" title="Slash Command">/</button>
+              <button class="toolbar-btn" data-format="emoji" title="Custom Emoji">😀</button>
+              <button class="toolbar-btn" data-format="header1" title="Header 1">H1</button>
+              <button class="toolbar-btn" data-format="header2" title="Header 2">H2</button>
+              <button class="toolbar-btn" data-format="header3" title="Header 3">H3</button>
+              <button class="toolbar-btn" data-format="list" title="Bullet List">•</button>
+              <button class="toolbar-btn" data-format="olist" title="Numbered List">1.</button>
+              <button class="toolbar-btn" data-format="timestamp" title="Timestamp">🕒</button>
+              <button class="toolbar-btn" data-format="highlight" title="Highlight">🔦</button>
             </div>
-            <div class="card-content">
-                <div class="preview-card">
-                    <div class="preview-header">
-                        <img id="previewAvatar" class="preview-avatar" src="https://i.imgur.com/T6H4E4R.png" alt="Avatar">
-                        <div id="previewUsername" class="preview-username">Webhook Bot</div>
-                    </div>
-                    <div id="previewContent" class="preview-content">
-                        Your message will appear here...
-                    </div>
-                    <div id="previewEmbed" class="preview-embed" style="display: none;">
-                        <div id="previewEmbedTitle" class="embed-title">Embed Title</div>
-                        <div id="previewEmbedDescription" class="embed-description">Embed Description</div>
-                        <div id="previewEmbedFooter" class="embed-footer">Embed Footer</div>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label class="form-label">JSON Payload Preview</label>
-                    <textarea id="jsonPreview" class="form-control" readonly style="height: 200px; font-family: monospace; font-size: 0.85rem;"></textarea>
-                </div>
-
-                <div class="settings-panel">
-                    <div class="settings-header" id="logToggle">
-                        <div class="settings-title">Message Log</div>
-                        <span>▼</span>
-                    </div>
-                    <div class="settings-content" id="messageLog">
-                        <div id="logContent" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem; padding: 0.5rem; background: rgba(0, 0, 0, 0.2); border-radius: 0.5rem;">
-                            No messages sent yet
-                        </div>
-                    </div>
-                </div>
+            <textarea id="message" class="form-control" placeholder="Type your message here. Supports full Discord formatting including headers (#, ##, ###), lists, and more."></textarea>
+            <div class="formatting-help"> Formatting: **bold**, *italic*, __underline__, ~~strikethrough~~, `code`, ```code block```, > quote, ||spoiler||, @mentions, #channels, @&role, /commands, :emoji:, &lt;t:timestamp&gt;, # Header 1, ## Header 2, ### Header 3, - lists, 1. numbered lists, ==highlight==, [links](https: </div>
+          </div>
+          <div class="settings-panel">
+            <div class="settings-header" id="embedToggle">
+              <div class="settings-title">Embed Settings</div>
+              <span>▼</span>
             </div>
+            <div class="settings-content" id="embedSettings">
+              <div class="form-group">
+                <label class="form-label" for="embedTitle">Title</label>
+                <input type="text" id="embedTitle" class="form-control" placeholder="Embed title" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="embedDescription">Description</label>
+                <textarea id="embedDescription" class="form-control" placeholder="Embed description (supports all formatting)"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="embedColor">Color</label>
+                <input type="color" id="embedColor" class="form-control" value="#3498db" />
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="embedFooter">Footer</label>
+                <input type="text" id="embedFooter" class="form-control" placeholder="Embed footer text" />
+              </div>
+            </div>
+          </div>
+          <div class="settings-panel">
+            <div class="settings-header" id="sendingToggle">
+              <div class="settings-title">Sending Options</div>
+              <span>▼</span>
+            </div>
+            <div class="settings-content" id="sendingSettings">
+              <div class="form-group">
+                <label class="form-label" for="sendInterval">Send Interval (ms)</label>
+                <input type="number" id="sendInterval" class="form-control" value="1000" min="500" max="10000" />
+                <div class="formatting-help">Minimum 500ms to avoid rate limits</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="sendCount">Number of Messages</label>
+                <input type="number" id="sendCount" class="form-control" value="1" min="0" />
+                <div class="formatting-help">Set to 0 for unlimited (until stopped)</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-top: 1.5rem;">
+            <button id="sendBtn" class="btn btn-primary btn-block">Send Test Message</button>
+            <button id="startBtn" class="btn btn-primary btn-block" style="margin-top: 0.5rem;">Start Auto-Sending</button>
+            <button id="stopBtn" class="btn btn-danger btn-block" style="margin-top: 0.5rem;" disabled>Stop Sending</button>
+          </div>
+          <div id="status" class="status inactive"> Ready to send messages </div>
         </div>
+      </div>
+      <!-- Preview Panel -->
+      <div class="card">
+        <div class="card-header">
+          <h1 class="title">Live Preview</h1>
+        </div>
+        <div class="card-content">
+          <div class="preview-card">
+            <div class="preview-header">
+              <img id="previewAvatar" class="preview-avatar" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="Avatar">
+              <div id="previewUsername" class="preview-username">Webhook Default</div>
+            </div>
+            <div id="previewContent" class="preview-content"> Your message will appear here... </div>
+            <div id="previewEmbed" class="preview-embed" style="display: none;">
+              <div id="previewEmbedTitle" class="embed-title">Embed Title</div>
+              <div id="previewEmbedDescription" class="embed-description">Embed Description</div>
+              <div id="previewEmbedFooter" class="embed-footer">Embed Footer</div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">JSON Payload Preview</label>
+            <textarea id="jsonPreview" class="form-control" readonly style="height: 200px; font-family: monospace; font-size: 0.85rem;"></textarea>
+            <div class="formatting-help">This is what will be sent to Discord's API</div>
+          </div>
+          <div class="settings-panel">
+            <div class="settings-header" id="logToggle">
+              <div class="settings-title">Message Log</div>
+              <span>▼</span>
+            </div>
+            <div class="settings-content" id="messageLog">
+              <div id="logContent" style="max-height: 200px; overflow-y: auto; font-size: 0.85rem; padding: 0.5rem; background: rgba(0, 0, 0, 0.2); border-radius: 0.5rem;"> No messages sent yet </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
-
     <script>
-        // DOM Elements
-        const webhookUrlInput = document.getElementById('webhookUrl');
-        const usernameInput = document.getElementById('username');
-        const avatarInput = document.getElementById('avatar');
-        const messageInput = document.getElementById('message');
-        const embedTitleInput = document.getElementById('embedTitle');
-        const embedDescriptionInput = document.getElementById('embedDescription');
-        const embedColorInput = document.getElementById('embedColor');
-        const embedFooterInput = document.getElementById('embedFooter');
-        const sendIntervalInput = document.getElementById('sendInterval');
-        const sendCountInput = document.getElementById('sendCount');
-        const sendBtn = document.getElementById('sendBtn');
-        const startBtn = document.getElementById('startBtn');
-        const stopBtn = document.getElementById('stopBtn');
-        const statusElement = document.getElementById('status');
-        const jsonPreview = document.getElementById('jsonPreview');
-        const logContent = document.getElementById('logContent');
+      const webhookUrlInput = document.getElementById('webhookUrl');
+      const usernameInput = document.getElementById('username');
+      const avatarInput = document.getElementById('avatar');
+      const messageInput = document.getElementById('message');
+      const embedTitleInput = document.getElementById('embedTitle');
+      const embedDescriptionInput = document.getElementById('embedDescription');
+      const embedColorInput = document.getElementById('embedColor');
+      const embedFooterInput = document.getElementById('embedFooter');
+      const sendIntervalInput = document.getElementById('sendInterval');
+      const sendCountInput = document.getElementById('sendCount');
+      const sendBtn = document.getElementById('sendBtn');
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const statusElement = document.getElementById('status');
+      const jsonPreview = document.getElementById('jsonPreview');
+      const logContent = document.getElementById('logContent');
+      const previewAvatar = document.getElementById('previewAvatar');
+      const previewUsername = document.getElementById('previewUsername');
+      const previewContent = document.getElementById('previewContent');
+      const previewEmbed = document.getElementById('previewEmbed');
+      const previewEmbedTitle = document.getElementById('previewEmbedTitle');
+      const previewEmbedDescription = document.getElementById('previewEmbedDescription');
+      const previewEmbedFooter = document.getElementById('previewEmbedFooter');
+      const embedToggle = document.getElementById('embedToggle');
+      const embedSettings = document.getElementById('embedSettings');
+      const sendingToggle = document.getElementById('sendingToggle');
+      const sendingSettings = document.getElementById('sendingSettings');
+      const logToggle = document.getElementById('logToggle');
+      const messageLog = document.getElementById('messageLog');
+      let messageInterval;
+      let sending = false;
+      let messageCount = 0;
+      let maxMessages = 0;
+      let webhookDefaults = {
+        name: 'Webhook Default',
+        avatar: 'https://cdn.discordapp.com/embed/avatars/0.png'
+      };
 
-        // Preview Elements
-        const previewAvatar = document.getElementById('previewAvatar');
-        const previewUsername = document.getElementById('previewUsername');
-        const previewContent = document.getElementById('previewContent');
-        const previewEmbed = document.getElementById('previewEmbed');
-        const previewEmbedTitle = document.getElementById('previewEmbedTitle');
-        const previewEmbedDescription = document.getElementById('previewEmbedDescription');
-        const previewEmbedFooter = document.getElementById('previewEmbedFooter');
+      function init() {
+        toggleSection(embedToggle, embedSettings);
+        toggleSection(sendingToggle, sendingSettings);
+        toggleSection(logToggle, messageLog);
+        initToolbar();
+        updateAllInputs();
+        initKeyboardShortcuts();
+        sendBtn.addEventListener('click', sendMessage);
+        startBtn.addEventListener('click', startSending);
+        stopBtn.addEventListener('click', stopSending);
+        updatePreview();
+        window.addEventListener('beforeunload', (e) => {
+          if (sending) {
+            const message = 'Messages are still being sent. Are you sure you want to leave?';
+            e.returnValue = message;
+            return message;
+          }
+        });
+        document.querySelectorAll('.card').forEach(card => {
+          card.addEventListener('mouseenter', () => {
+            card.style.transform = 'translateY(-5px)';
+            card.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
+          });
+          card.addEventListener('mouseleave', () => {
+            card.style.transform = 'translateY(0)';
+            card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
+          });
+        });
+        webhookUrlInput.addEventListener('focus', function() {
+          if (!this.value) {
+            this.placeholder = 'https://discord.com/api/webhooks/1234567890/abcdefghijklmnopqrstuvwxyz';
+          }
+        });
+        webhookUrlInput.addEventListener('blur', function() {
+          this.placeholder = 'https://discord.com/api/webhooks/...';
+        });
+        webhookUrlInput.addEventListener('change', tryFetchWebhookInfo);
+      }
+      async function tryFetchWebhookInfo() {
+          const webhookUrl = webhookUrlInput.value.trim();
+          if (!webhookUrl) return;
+          try {
+            const response = await fetch(webhookUrl);
+            if (response.ok) {
+              const data = await response.json();
+              webhookDefaults = {
+                name: data.name || 'Webhook Default',
+                avatar: data.avatar ? `https:
+                    };
 
-        // Collapsible sections
-        const embedToggle = document.getElementById('embedToggle');
-        const embedSettings = document.getElementById('embedSettings');
-        const sendingToggle = document.getElementById('sendingToggle');
-        const sendingSettings = document.getElementById('sendingSettings');
-        const logToggle = document.getElementById('logToggle');
-        const messageLog = document.getElementById('messageLog');
+                    updatePreview();
+                }
+            } catch (error) {
+                console.log('Could not fetch webhook info, using defaults');
+            }
+        }
 
-        // Global variables
-        let messageInterval;
-        let sending = false;
-        let messageCount = 0;
-        let maxMessages = 0;
-
-        // Toggle collapsible sections
         function toggleSection(toggle, content) {
             toggle.addEventListener('click', () => {
                 content.classList.toggle('active');
@@ -653,47 +1046,185 @@
             });
         }
 
-        toggleSection(embedToggle, embedSettings);
-        toggleSection(sendingToggle, sendingSettings);
-        toggleSection(logToggle, messageLog);
-
-        // Initialize formatting toolbar
-        const toolbarButtons = document.querySelectorAll('.toolbar-btn');
-        toolbarButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const format = button.getAttribute('data-format');
-                applyFormatting(format);
+        function initToolbar() {
+            const toolbarButtons = document.querySelectorAll('.toolbar-btn');
+            toolbarButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const format = button.getAttribute('data-format');
+                    applyFormatting(format);
+                });
             });
-        });
+        }
 
-        function applyFormatting(format) {
+        function initKeyboardShortcuts() {
+            messageInput.addEventListener('keydown', (e) => {
+
+                if (!e.ctrlKey && !e.metaKey) return;
+
+                let format = null;
+
+                if (e.key === 'b' || e.key === 'B') format = 'bold';
+                else if (e.key === 'i' || e.key === 'I') format = 'italic';
+                else if (e.key === 'u' || e.key === 'U') format = 'underline';
+                else if (e.key === 's' || e.key === 'S') format = 'strike';
+                else if (e.key === '`
+                ' && e.shiftKey) format = '
+                codeblock ';
+                else if (e.key === '`') format = 'code';
+                else if (e.key === 'q' || e.key === 'Q') format = 'quote';
+                else if (e.key === 'k' || e.key === 'K') format = 'link';
+                else if (e.key === 'p' || e.key === 'P') format = 'spoiler';
+                else if (e.key === '1' && e.shiftKey) format = 'header1';
+                else if (e.key === '2' && e.shiftKey) format = 'header2';
+                else if (e.key === '3' && e.shiftKey) format = 'header3';
+                else if (e.key === 'm' || e.key === 'M') format = 'mention';
+                else if (e.key === 'c' || e.key === 'C') format = 'channel';
+                else if (e.key === 'r' || e.key === 'R') format = 'role';
+                else if (e.key === 'e' || e.key === 'E') format = 'emoji';
+                else if (e.key === 't' || e.key === 'T') format = 'timestamp';
+                else if (e.key === 'h' || e.key === 'H') format = 'highlight';
+                else if (e.key === '/') format = 'slash';
+                if (format) {
+                  e.preventDefault();
+                  applyFormatting(format);
+                }
+              });
+          }
+
+          function applyFormatting(format) {
             const textarea = messageInput;
             const start = textarea.selectionStart;
             const end = textarea.selectionEnd;
             const selectedText = textarea.value.substring(start, end);
             let replacement = '';
-
+            let cursorOffset = 0;
             switch (format) {
-                case 'bold':
-                    replacement = `**${selectedText}**`;
-                    break;
-                case 'italic':
-                    replacement = `*${selectedText}*`;
-                    break;
-                case 'underline':
-                    replacement = `__${selectedText}__`;
-                    break;
-                case 'strike':
-                    replacement = `~~${selectedText}~~`;
-                    break;
-                case 'code':
-                    replacement = `\`${selectedText}\``;
-                    break;
-                case 'link':
-                    replacement = `[${selectedText}](https://example.com)`;
+              case 'bold':
+                replacement = `**${selectedText}**`;
+                cursorOffset = 2;
+                break;
+              case 'italic':
+                replacement = `*${selectedText}*`;
+                cursorOffset = 1;
+                break;
+              case 'underline':
+                replacement = `__${selectedText}__`;
+                cursorOffset = 2;
+                break;
+              case 'strike':
+                replacement = `~~${selectedText}~~`;
+                cursorOffset = 2;
+                break;
+              case 'code':
+                replacement = `\`${selectedText}\``;
+                cursorOffset = 1;
+                break;
+              case 'codeblock':
+                replacement = `\`\`\`\n${selectedText}\n\`\`\``;
+                cursorOffset = 4;
+                break;
+              case 'link':
+                replacement = `[${selectedText}](https:
+                    cursorOffset = 1;
                     break;
                 case 'quote':
-                    replacement = `> ${selectedText}`;
+                    replacement = ` > $ {
+                  selectedText
+                }
+                `;
+                    cursorOffset = 2;
+                    break;
+                case 'spoiler':
+                    replacement = ` || $ {
+                  selectedText
+                } || `;
+                    cursorOffset = 2;
+                    break;
+                case 'mention':
+                    replacement = ` < @$ {
+                  selectedText || '1234567890'
+                } > `;
+                    cursorOffset = selectedText ? 2 : 11;
+                    break;
+                case 'channel':
+                    replacement = ` < #$ {
+                  selectedText || '1234567890'
+                } > `;
+                    cursorOffset = selectedText ? 2 : 11;
+                    break;
+                case 'role':
+                    replacement = ` < @ & $ {
+                  selectedText || '1234567890'
+                } > `;
+                    cursorOffset = selectedText ? 3 : 12;
+                    break;
+                case 'slash':
+                    replacement = ` / $ {
+                  selectedText || 'command'
+                }
+                `;
+                    cursorOffset = selectedText ? 1 : 8;
+                    break;
+                case 'emoji':
+                    replacement = `: $ {
+                  selectedText || 'smile'
+                }: `;
+                    cursorOffset = selectedText ? 1 : 6;
+                    break;
+                case 'timestamp':
+                    replacement = ` < t: $ {
+                  selectedText || Math.floor(Date.now() / 1000)
+                } > `;
+                    cursorOffset = selectedText ? 4 : 14;
+                    break;
+                case 'highlight':
+                    replacement = ` == $ {
+                  selectedText
+                } == `;
+                    cursorOffset = 2;
+                    break;
+                case 'header1':
+                    replacement = `
+                # $ {
+                  selectedText
+                }
+                `;
+                    cursorOffset = 2;
+                    break;
+                case 'header2':
+                    replacement = `
+                # # $ {
+                  selectedText
+                }
+                `;
+                    cursorOffset = 3;
+                    break;
+                case 'header3':
+                    replacement = `
+                # # # $ {
+                  selectedText
+                }
+                `;
+                    cursorOffset = 4;
+                    break;
+                case 'list':
+                    replacement = selectedText 
+                        ? ` - $ {
+                  selectedText.replace(/\n/g, '\n- ')
+                }
+                `
+                        : '- ';
+                    cursorOffset = 2;
+                    break;
+                case 'olist':
+                    replacement = selectedText 
+                        ? `
+                1. $ {
+                  selectedText.replace(/\n/g, '\n1. ')
+                }
+                `
+                        : '1. ';
+                    cursorOffset = 3;
                     break;
                 default:
                     return;
@@ -702,51 +1233,53 @@
             textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
             updatePreview();
             textarea.focus();
-            textarea.selectionStart = start + replacement.length;
-            textarea.selectionEnd = start + replacement.length;
+
+            if (selectedText) {
+                textarea.selectionStart = start + replacement.length;
+                textarea.selectionEnd = start + replacement.length;
+            } else {
+                textarea.selectionStart = start + cursorOffset;
+                textarea.selectionEnd = start + cursorOffset;
+            }
         }
 
-        // Update preview and JSON payload when inputs change
         function updateAllInputs() {
             const inputs = [
                 webhookUrlInput, usernameInput, avatarInput, messageInput,
                 embedTitleInput, embedDescriptionInput, embedColorInput, embedFooterInput
             ];
-            
+
             inputs.forEach(input => {
                 input.addEventListener('input', updatePreview);
             });
         }
 
         function updatePreview() {
-            // Update username and avatar
-            const username = usernameInput.value.trim() || 'Webhook Bot';
-            const avatarUrl = avatarInput.value.trim() || 'https://i.imgur.com/T6H4E4R.png';
-            
+
+            const username = usernameInput.value.trim() || webhookDefaults.name;
+            const avatarUrl = avatarInput.value.trim() || webhookDefaults.avatar;
+
             previewUsername.textContent = username;
             previewAvatar.src = avatarUrl;
-            
-            // Update message content with markdown formatting
+
             const messageContent = messageInput.value.trim();
             previewContent.innerHTML = parseMarkdown(messageContent || 'Your message will appear here...');
-            
-            // Update embed
+
             const embedTitle = embedTitleInput.value.trim();
             const embedDescription = embedDescriptionInput.value.trim();
             const embedColor = embedColorInput.value;
             const embedFooter = embedFooterInput.value.trim();
-            
+
             if (embedTitle || embedDescription || embedFooter) {
                 previewEmbed.style.display = 'block';
                 previewEmbed.style.borderLeftColor = embedColor;
                 previewEmbedTitle.textContent = embedTitle || 'Embed Title';
-                previewEmbedDescription.textContent = embedDescription || 'Embed Description';
+                previewEmbedDescription.innerHTML = parseMarkdown(embedDescription || 'Embed Description');
                 previewEmbedFooter.textContent = embedFooter || 'Embed Footer';
             } else {
                 previewEmbed.style.display = 'none';
             }
-            
-            // Update JSON preview
+
             updateJsonPreview();
         }
 
@@ -755,221 +1288,357 @@
             jsonPreview.value = JSON.stringify(payload, null, 2);
         }
 
-        // Parse markdown for preview
         function parseMarkdown(text) {
             if (!text) return '';
-            
-            let formattedText = text;
-            
-            // Code blocks
-            formattedText = formattedText.replace(/```(?:\w+)?\n([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-            
-            // Bold
-            formattedText = formattedText.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            
-            // Italic
-            formattedText = formattedText.replace(/\*(.*?)\*/g, '<em>$1</em>');
-            
-            // Underline
-            formattedText = formattedText.replace(/__(.*?)__/g, '<u>$1</u>');
-            
-            // Strikethrough
-            formattedText = formattedText.replace(/~~(.*?)~~/g, '<s>$1</s>');
-            
-            // Inline code
-            formattedText = formattedText.replace(/`([^`]+)`/g, '<code>$1</code>');
-            
-            // Links
-            formattedText = formattedText.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:#3498db;">$1</a>');
-            
-            // Blockquotes
-            formattedText = formattedText.replace(/^>\s*(.*$)/gm, '<blockquote style="border-left: 3px solid #666; padding-left: 10px; color: #aaa;">$1</blockquote>');
-            
-            // Lists
-            formattedText = formattedText.replace(/^\s*[\*\-\+]\s+(.*$)/gm, '<li>$1</li>');
-            formattedText = formattedText.replace(/(<li>.*<\/li>)/gms, '<ul>$1</ul>');
-            
-            // Linebreaks
-            formattedText = formattedText.replace(/\n/g, '<br>');
-            
-            return formattedText;
-        }
 
-        // Create webhook payload from form inputs
-        function createPayload() {
-            const username = usernameInput.value.trim() || 'Webhook Bot';
-            const avatarUrl = avatarInput.value.trim() || 'https://i.imgur.com/T6H4E4R.png';
-            const content = messageInput.value.trim();
-            
-            const payload = {
-                username: username,
-                avatar_url: avatarUrl,
-                content: content || null
-            };
-            
-            // Add embed if any field is filled
-            const embedTitle = embedTitleInput.value.trim();
-            const embedDescription = embedDescriptionInput.value.trim();
-            const embedColor = embedColorInput.value;
-            const embedFooter = embedFooterInput.value.trim();
-            
-            if (embedTitle || embedDescription || embedFooter) {
-                // Convert hex color to decimal for Discord API
-                const colorDec = parseInt(embedColor.replace('#', ''), 16);
-                
-                payload.embeds = [{
-                    title: embedTitle || undefined,
-                    description: embedDescription || undefined,
-                    color: colorDec,
-                    footer: embedFooter ? { text: embedFooter } : undefined
-                }];
-            }
-            
-            return payload;
-        }
-
-        // Send a single message
-        async function sendMessage() {
-            const webhookUrl = webhookUrlInput.value.trim();
-            if (!webhookUrl) {
-                updateStatus('Please enter a webhook URL', false);
-                return false;
-            }
-            
-            const payload = createPayload();
-            
-            try {
-                updateStatus('Sending message...', true);
-                
-                const response = await fetch(webhookUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`HTTP error ${response.status}: ${errorText}`);
-                }
-                
-                messageCount++;
-                updateStatus(`Message sent successfully! (Total: ${messageCount})`, true);
-                addToLog(`Message #${messageCount} sent successfully`);
-                return true;
-            } catch (error) {
-                updateStatus(`Error: ${error.message}`, false);
-                addToLog(`Error sending message: ${error.message}`, true);
-                return false;
-            }
-        }
-
-        // Start sending messages at interval
-        function startSending() {
-            if (sending) return;
-            
-            const interval = parseInt(sendIntervalInput.value) || 1000;
-            maxMessages = parseInt(sendCountInput.value) || 0;
-            
-            if (interval < 500) {
-                updateStatus('Interval must be at least 500ms to avoid rate limits', false);
-                return;
-            }
-            
-            sending = true;
-            startBtn.disabled = true;
-            sendBtn.disabled = true;
-            stopBtn.disabled = false;
-            
-            updateStatus('Starting automatic sending...', true);
-            
-            messageInterval = setInterval(async () => {
-                const success = await sendMessage();
-                
-                // If maxMessages is set and we've hit the limit, stop sending
-                if (maxMessages > 0 && messageCount >= maxMessages) {
-                    stopSending();
-                    updateStatus(`Completed sending ${maxMessages} messages`, true);
-                }
-                
-                // If the message failed, stop sending
-                if (!success) {
-                    stopSending();
-                }
-            }, interval);
-        }
-
-        // Stop sending messages
-        function stopSending() {
-            if (!sending) return;
-            
-            clearInterval(messageInterval);
-            sending = false;
-            startBtn.disabled = false;
-            sendBtn.disabled = false;
-            stopBtn.disabled = true;
-            
-            updateStatus('Stopped sending messages', false);
-        }
-
-        // Update status display
-        function updateStatus(message, isActive) {
-            statusElement.textContent = message;
-            statusElement.className = isActive ? 'status active' : 'status inactive';
-        }
-
-        // Add message to log
-        function addToLog(message, isError = false) {
-            const logEntry = document.createElement('div');
-            logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
-            
-            if (isError) {
-                logEntry.style.color = 'var(--error-color)';
-            }
-            
-            logContent.appendChild(logEntry);
-            logContent.scrollTop = logContent.scrollHeight;
-            
-            // If log is not expanded, show indicator
-            if (!messageLog.classList.contains('active')) {
-                logToggle.style.animation = 'titlePulse 1s ease-in-out';
-                setTimeout(() => {
-                    logToggle.style.animation = '';
-                }, 1000);
-            }
-        }
-
-        // Event listeners
-        sendBtn.addEventListener('click', sendMessage);
-        startBtn.addEventListener('click', startSending);
-        stopBtn.addEventListener('click', stopSending);
-
-        // Initialize
-        updateAllInputs();
-        updatePreview();
-
-        // Add confirmation before leaving page while sending
-        window.addEventListener('beforeunload', (e) => {
-            if (sending) {
-                const message = 'Messages are still being sent. Are you sure you want to leave?';
-                e.returnValue = message;
-                return message;
-            }
-        });
-
-        // Some animation effects for UI elements
-        document.querySelectorAll('.card').forEach(card => {
-            card.addEventListener('mouseenter', () => {
-                card.style.transform = 'translateY(-5px)';
-                card.style.boxShadow = '0 25px 50px rgba(0, 0, 0, 0.7), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
+            text = text.replace(/`
+                ``([a - z] * )\ n ? ([\s\ S] * ? )\ n ? ``
+                `/gi, (match, lang, code) => {
+                return `\
+                `\`\`${lang ? lang+'\n' : ''}${escapeHtml(code)}\`\`\``;
             });
-            
-            card.addEventListener('mouseleave', () => {
-                card.style.transform = 'translateY(0)';
-                card.style.boxShadow = '0 20px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1) inset';
-            });
-        });
+          text = escapeHtml(text).replace(/&lt;(\/?pre)&gt;/g, '<$1>').replace(/&lt;(\/?code)&gt;/g, '<$1>');
+          text = text.replace(/```([a-z]*)\n?([\s\S]*?)\n?```/gi, (match, lang, code) => {
+            return `
+								<pre class="discord-codeblock">${code}</pre>`;
+          });
+          text = text.replace(/`([^`]+)`/g, ' < code class = "discord-inline-code" > $1 < /code>');
+              text = text.replace(/^# (.*$)/gm, ' < h1 class = "discord-header-1" > $1 < /h1>');
+                text = text.replace(/^## (.*$)/gm, ' < h2 class = "discord-header-2" > $1 < /h2>');
+                  text = text.replace(/^### (.*$)/gm, ' < h3 class = "discord-header-3" > $1 < /h3>');
+                    text = text.replace(/\*\*([^*]+)\*\*/g, ' < strong class = "discord-bold" > $1 < /strong>');
+                      text = text.replace(/__([^_]+)__/g, ' < strong class = "discord-bold" > $1 < /strong>');
+                        text = text.replace(/\*([^*]+)\*/g, ' < em class = "discord-italic" > $1 < /em>');
+                          text = text.replace(/_([^_]+)_/g, ' < em class = "discord-italic" > $1 < /em>');
+                            text = text.replace(/__([^_]+)__/g, ' < u class = "discord-underline" > $1 < /u>');
+                              text = text.replace(/~~([^~]+)~~/g, ' < s class = "discord-strikethrough" > $1 < /s>');
+                                text = text.replace(/\|\|([^|]+)\|\|/g, ' < span class = "discord-spoiler" > $1 < /span>');
+                                  text = text.replace(/==([^=]+)==/g, ' < span class = "discord-highlight" > $1 < /span>');
+                                    text = text.replace(/^>\s(.+)$/gm, ' < div class = "discord-blockquote" > $1 < /div>');
+                                      text = text.replace(/^-\s+(.*$)/gm, ' < ul class = "discord-list" > < li class = "discord-list-item" > $1 < /li> < /ul>');
+                                        text = text.replace(/^(\d+)\.\s+(.*$)/gm, ' < ol class = "discord-ordered-list" > < li class = "discord-ordered-item" > $2 < /li> < /ol>');
+                                          text = text.replace(/@everyone/g, ' < span class = "discord-mention everyone" > @everyone < /span>');
+                                            text = text.replace(/@here/g, ' < span class = "discord-mention here" > @here < /span>');
+                                              text = text.replace(/&lt;@!?(\d+)&gt;/g, ' < span class = "discord-mention" > @user < /span>');
+                                                text = text.replace(/&lt;#(\d+)&gt;/g, ' < span class = "discord-channel" > #channel < /span>');
+                                                  text = text.replace(/&lt;@&amp;(\d+)&gt;/g, ' < span class = "discord-role" > @role < /span>');
+                                                    text = text.replace(/&lt;\/([a-zA-Z0-9_-]+)(?::([a-zA-Z0-9_-]+))?(?: .*?)?&gt;/g, ' < span class = "discord-slash-command" > /$1$2</span > ');
+                                                      text = text.replace(/&lt;:([a-zA-Z0-9_]+):(\d+)&gt;/g, ' < img class = "discord-custom-emoji"
+                                                        src = "https://cdn.discordapp.com/emojis/$2.png"
+                                                        alt = ":$1:" > ');
+                                                        text = text.replace(/&lt;a:([a-zA-Z0-9_]+):(\d+)&gt;/g, ' < img class = "discord-animated-emoji"
+                                                          src = "https://cdn.discordapp.com/emojis/$2.gif"
+                                                          alt = ":$1:" > ');
+                                                          text = text.replace(/:([a-zA-Z0-9_]+):/g, ' < span class = "discord-emoji" > : $1: < /span>');
+                                                            text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, ' < a href = "$2"
+                                                              target = "_blank"
+                                                              rel = "noopener noreferrer"
+                                                              class = "discord-link" > $1 < /a>');
+                                                              text = text.replace(/(https?:\/\/[^\s]+)/g, (match, url) => {
+                                                                if (/ < a\ s[ ^ > ] * href = ["']?[^"
+                                                                    '\s]+["'
+                                                                  ] ? [ ^ > ] * > .* ? < \/a>/i.test(match)) {
+                                                                  return match;
+                                                                }
+                                                                return `
+											<a href="${url}" target="_blank" rel="noopener noreferrer" class="discord-link">${url}</a>`;
+                                                              }); text = text.replace(/&lt;t:(\d+)(?::([tTdDfFR]))?&gt;/g, (match, timestamp, format) => {
+                                                                const date = new Date(timestamp * 1000);
+                                                                let formattedDate;
+                                                                switch (format) {
+                                                                  case 't':
+                                                                    formattedDate = date.toLocaleTimeString([], {
+                                                                      hour: '2-digit',
+                                                                      minute: '2-digit'
+                                                                    });
+                                                                    break;
+                                                                  case 'T':
+                                                                    formattedDate = date.toLocaleTimeString([], {
+                                                                      hour: '2-digit',
+                                                                      minute: '2-digit',
+                                                                      second: '2-digit'
+                                                                    });
+                                                                    break;
+                                                                  case 'd':
+                                                                    formattedDate = date.toLocaleDateString();
+                                                                    break;
+                                                                  case 'D':
+                                                                    formattedDate = date.toLocaleDateString([], {
+                                                                      day: 'numeric',
+                                                                      month: 'long',
+                                                                      year: 'numeric'
+                                                                    });
+                                                                    break;
+                                                                  case 'f':
+                                                                    formattedDate = date.toLocaleString([], {
+                                                                      day: 'numeric',
+                                                                      month: 'long',
+                                                                      year: 'numeric',
+                                                                      hour: '2-digit',
+                                                                      minute: '2-digit'
+                                                                    });
+                                                                    break;
+                                                                  case 'F':
+                                                                    formattedDate = date.toLocaleString([], {
+                                                                      weekday: 'long',
+                                                                      day: 'numeric',
+                                                                      month: 'long',
+                                                                      year: 'numeric',
+                                                                      hour: '2-digit',
+                                                                      minute: '2-digit'
+                                                                    });
+                                                                    break;
+                                                                  case 'R':
+                                                                    formattedDate = formatRelativeTime(timestamp);
+                                                                    break;
+                                                                  default:
+                                                                    formattedDate = date.toLocaleString([], {
+                                                                      day: 'numeric',
+                                                                      month: 'long',
+                                                                      year: 'numeric',
+                                                                      hour: '2-digit',
+                                                                      minute: '2-digit'
+                                                                    });
+                                                                }
+                                                                return `
+											<span class="discord-timestamp" title="${date.toLocaleString()}">${formattedDate}</span>`;
+                                                              }); text = text.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&'); text = text.replace(/\n/g, ' < br > ');
+                                                                return text;
+                                                              }
+
+                                                              function wouldGenerateEmbed(url) {
+                                                                const embedPatterns = [/youtube\.com\/watch\?v=/i, /youtu\.be\ / twitter\.com\ / [ ^ \/]+\/status\ / x\.com\ / [ ^ \/]+\/status\ / reddit\.com\ / r\ / [ ^ \/]+\/comments\ / imgur\.com\ / giphy\.com\ / tenor\.com\ / spotify\.com\ / soundcloud\.com\ / twitch\.tv\ / \.(jpg | jpeg | png | gif | webp | mp4 | mov | webm) $ / i];
+                                                                        return embedPatterns.some(pattern => pattern.test(url));
+                                                                      }
+
+                                                                      function generateLinkEmbed(url) {
+                                                                        if (!wouldGenerateEmbed(url)) return '';
+                                                                        let embedHtml = ' < div class = "discord-embed" > ';
+                                                                        if (url.includes('youtube.com') || url.includes('youtu.be')) {
+                                                                          embedHtml += `
+                    
+													<div class="discord-embed-title">YouTube Video</div>
+													<div class="discord-embed-description">This is a preview of a YouTube video that would be embedded in Discord.</div>
+													<div class="discord-embed-url">${url}</div>
+                `;
+                                                                        } else if (url.includes('twitter.com') || url.includes('x.com')) {
+                                                                          embedHtml += `
+                    
+													<div class="discord-embed-title">Twitter Post</div>
+													<div class="discord-embed-description">This is a preview of a Twitter post that would be embedded in Discord.</div>
+													<div class="discord-embed-url">${url}</div>
+                `;
+                                                                        } else if (/\.(jpg|jpeg|png|gif|webp)$/i.test(url)) {
+                                                                          embedHtml += `
+                    
+													<img src="${url}" class="discord-embed-image" alt="Embedded image">
+														<div class="discord-embed-url">${url}</div>
+                `;
+                                                                        } else {
+                                                                          embedHtml += `
+                    
+														<div class="discord-embed-title">Website Preview</div>
+														<div class="discord-embed-description">This is a preview of the website that would be embedded in Discord.</div>
+														<div class="discord-embed-url">${url}</div>
+                `;
+                                                                        }
+                                                                        embedHtml += ' < /div>';
+                                                                        return embedHtml;
+                                                                      }
+
+                                                                      function updatePreview() {
+                                                                        const username = usernameInput.value.trim() || webhookDefaults.name;
+                                                                        const avatarUrl = avatarInput.value.trim() || webhookDefaults.avatar;
+                                                                        previewUsername.textContent = username;
+                                                                        previewAvatar.src = avatarUrl;
+                                                                        const messageContent = messageInput.value.trim();
+                                                                        let previewHtml = parseMarkdown(messageContent || 'Your message will appear here...');
+                                                                        const urls = messageContent.match(/(https?:\/\/[^\s]+)/g) || [];
+                                                                        urls.forEach(url => {
+                                                                          if (wouldGenerateEmbed(url)) {
+                                                                            previewHtml += generateLinkEmbed(url);
+                                                                          }
+                                                                        });
+                                                                        previewContent.innerHTML = previewHtml;
+                                                                        const embedTitle = embedTitleInput.value.trim();
+                                                                        const embedDescription = embedDescriptionInput.value.trim();
+                                                                        const embedColor = embedColorInput.value;
+                                                                        const embedFooter = embedFooterInput.value.trim();
+                                                                        if (embedTitle || embedDescription || embedFooter) {
+                                                                          previewEmbed.style.display = 'block';
+                                                                          previewEmbed.style.borderLeftColor = embedColor;
+                                                                          previewEmbedTitle.textContent = embedTitle || 'Embed Title';
+                                                                          previewEmbedDescription.innerHTML = parseMarkdown(embedDescription || 'Embed Description');
+                                                                          previewEmbedFooter.textContent = embedFooter || 'Embed Footer';
+                                                                        } else {
+                                                                          previewEmbed.style.display = 'none';
+                                                                        }
+                                                                        updateJsonPreview();
+                                                                      }
+
+                                                                      function formatRelativeTime(timestamp) {
+                                                                        const now = Math.floor(Date.now() / 1000);
+                                                                        const diff = now - timestamp;
+                                                                        if (diff < 60) return 'just now';
+                                                                        if (diff < 3600) {
+                                                                          const mins = Math.floor(diff / 60);
+                                                                          return `${mins} minute${mins !== 1 ? 's' : ''} ago`;
+                                                                        }
+                                                                        if (diff < 86400) {
+                                                                          const hours = Math.floor(diff / 3600);
+                                                                          return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
+                                                                        }
+                                                                        if (diff < 2592000) {
+                                                                          const days = Math.floor(diff / 86400);
+                                                                          return `${days} day${days !== 1 ? 's' : ''} ago`;
+                                                                        }
+                                                                        if (diff < 31536000) {
+                                                                          const months = Math.floor(diff / 2592000);
+                                                                          return `${months} month${months !== 1 ? 's' : ''} ago`;
+                                                                        }
+                                                                        const years = Math.floor(diff / 31536000);
+                                                                        return `${years} year${years !== 1 ? 's' : ''} ago`;
+                                                                      }
+
+                                                                      function escapeHtml(unsafe) {
+                                                                        return unsafe.replace(/&/g, "&amp;").replace(/ < /g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+                                                                        }
+
+                                                                        function createPayload() {
+                                                                          const username = usernameInput.value.trim();
+                                                                          const avatarUrl = avatarInput.value.trim();
+                                                                          const content = messageInput.value.trim();
+                                                                          const payload = {
+                                                                            content: content || null
+                                                                          };
+                                                                          if (username) payload.username = username;
+                                                                          if (avatarUrl) payload.avatar_url = avatarUrl;
+                                                                          const embedTitle = embedTitleInput.value.trim();
+                                                                          const embedDescription = embedDescriptionInput.value.trim();
+                                                                          const embedColor = embedColorInput.value;
+                                                                          const embedFooter = embedFooterInput.value.trim();
+                                                                          if (embedTitle || embedDescription || embedFooter) {
+                                                                            const colorDec = parseInt(embedColor.replace('#', ''), 16);
+                                                                            payload.embeds = [{
+                                                                              title: embedTitle || undefined,
+                                                                              description: embedDescription || undefined,
+                                                                              color: colorDec,
+                                                                              footer: embedFooter ? {
+                                                                                text: embedFooter
+                                                                              } : undefined
+                                                                            }];
+                                                                          }
+                                                                          return payload;
+                                                                        }
+                                                                        async function sendMessage() {
+                                                                          const webhookUrl = webhookUrlInput.value.trim();
+                                                                          if (!webhookUrl) {
+                                                                            updateStatus('Please enter a webhook URL', false);
+                                                                            return false;
+                                                                          }
+                                                                          if (!webhookUrl.match(/^https:\/\/(?:discord\.com|discordapp\.com)\/api(?:\/v\d+)?\/webhooks\/\d+\/[a-zA-Z0-9_-]+(?:\?.*)?$/i)) {
+                                                                            updateStatus('Invalid webhook URL format. Expected format: https://discord.com/api/webhooks/WEBHOOK_ID/WEBHOOK_TOKEN', false);
+                                                                            return false;
+                                                                          }
+                                                                          const payload = createPayload();
+                                                                          try {
+                                                                            updateStatus('Sending message...', true);
+                                                                            const response = await fetch(webhookUrl, {
+                                                                              method: 'POST',
+                                                                              headers: {
+                                                                                'Content-Type': 'application/json'
+                                                                              },
+                                                                              body: JSON.stringify(payload)
+                                                                            });
+                                                                            if (!response.ok) {
+                                                                              const errorText = await response.text();
+                                                                              throw new Error(`HTTP error ${response.status}: ${errorText}`);
+                                                                            }
+                                                                            messageCount++;
+                                                                            updateStatus(`Message sent successfully! (Total: ${messageCount})`, true);
+                                                                            addToLog(`Message #${messageCount} sent successfully`);
+                                                                            return true;
+                                                                          } catch (error) {
+                                                                            console.error('Error sending message:', error);
+                                                                            updateStatus(`Error: ${error.message}`, false);
+                                                                            addToLog(`Error sending message: ${error.message}`, true);
+                                                                            return false;
+                                                                          }
+                                                                        }
+
+                                                                        function startSending() {
+                                                                          if (sending) return;
+                                                                          const interval = parseInt(sendIntervalInput.value) || 1000;
+                                                                          maxMessages = parseInt(sendCountInput.value) || 0;
+                                                                          if (interval < 500) {
+                                                                            updateStatus('Interval must be at least 500ms to avoid rate limits', false);
+                                                                            return;
+                                                                          }
+                                                                          if (maxMessages < 0) {
+                                                                            updateStatus('Message count must be 0 (unlimited) or positive', false);
+                                                                            return;
+                                                                          }
+                                                                          sending = true;
+                                                                          messageCount = 0;
+                                                                          startBtn.disabled = true;
+                                                                          sendBtn.disabled = true;
+                                                                          stopBtn.disabled = false;
+                                                                          updateStatus('Starting automatic sending...', true);
+                                                                          addToLog(`Started sending messages (interval: ${interval}ms, count: ${maxMessages || 'unlimited'})`);
+                                                                          sendMessage().then(success => {
+                                                                            if (!success) {
+                                                                              stopSending();
+                                                                              return;
+                                                                            }
+                                                                            if (maxMessages === 1) {
+                                                                              stopSending();
+                                                                              return;
+                                                                            }
+                                                                            messageInterval = setInterval(async () => {
+                                                                              const success = await sendMessage();
+                                                                              if (maxMessages > 0 && messageCount >= maxMessages) {
+                                                                                stopSending();
+                                                                                updateStatus(`Completed sending ${maxMessages} messages`, true);
+                                                                              }
+                                                                              if (!success) {
+                                                                                stopSending();
+                                                                              }
+                                                                            }, interval);
+                                                                          });
+                                                                        }
+
+                                                                        function stopSending() {
+                                                                          if (!sending) return;
+                                                                          clearInterval(messageInterval);
+                                                                          sending = false;
+                                                                          startBtn.disabled = false;
+                                                                          sendBtn.disabled = false;
+                                                                          stopBtn.disabled = true;
+                                                                          updateStatus('Stopped sending messages', false);
+                                                                          addToLog('Stopped sending messages');
+                                                                        }
+
+                                                                        function updateStatus(message, isActive) {
+                                                                          statusElement.textContent = message;
+                                                                          statusElement.className = isActive ? 'status active' : 'status inactive';
+                                                                        }
+
+                                                                        function addToLog(message, isError = false) {
+                                                                          const logEntry = document.createElement('div');
+                                                                          logEntry.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+                                                                          if (isError) {
+                                                                            logEntry.style.color = 'var(--error-color)';
+                                                                          }
+                                                                          logContent.appendChild(logEntry);
+                                                                          logContent.scrollTop = logContent.scrollHeight;
+                                                                          if (!messageLog.classList.contains('active')) {
+                                                                            logToggle.style.animation = 'titlePulse 1s ease-in-out';
+                                                                            setTimeout(() => {
+                                                                              logToggle.style.animation = '';
+                                                                            }, 1000);
+                                                                          }
+                                                                        }
+                                                                        document.addEventListener('DOMContentLoaded', init);
     </script>
-</body>
+  </body>
 </html>
